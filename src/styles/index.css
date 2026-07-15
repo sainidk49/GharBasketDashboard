@@ -1,0 +1,160 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #2E7D32;
+  --color-primary-dark: #1B5E20;
+  --color-primary-light: #4CAF50;
+  --color-primary-surface: #E8F5E9;
+  --color-secondary: #FF6F00;
+  --color-secondary-light: #FFB300;
+  --color-accent: #1976D2;
+  --color-surface: #FFFFFF;
+  --color-background: #F5F5F5;
+  --color-sidebar: #1A1A2E;
+  --color-sidebar-hover: #16213E;
+  --color-sidebar-active: #0F3460;
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #666666;
+  --color-text-tertiary: #999999;
+  --color-border: #E0E0E0;
+  --color-divider: #F0F0F0;
+  --color-success: #2E7D32;
+  --color-error: #D32F2F;
+  --color-warning: #F57F17;
+  --color-info: #1976D2;
+  --color-pending: #FF8F00;
+  --color-draft: #78909C;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #CBD5E1 transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: #CBD5E1;
+    border-radius: 3px;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-text-primary border border-border px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-danger {
+    @apply bg-error text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-error/40 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply text-text-secondary px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:bg-gray-100 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .card {
+    @apply bg-surface rounded-xl border border-border shadow-sm;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2.5 border border-border rounded-lg text-sm text-text-primary bg-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder:text-text-tertiary disabled:bg-gray-50 disabled:cursor-not-allowed;
+  }
+
+  .label-text {
+    @apply block text-sm font-medium text-text-primary mb-1.5;
+  }
+
+  .helper-text {
+    @apply text-xs text-text-tertiary mt-1;
+  }
+
+  .error-text {
+    @apply text-xs text-error mt-1;
+  }
+
+  .section-title {
+    @apply text-lg font-semibold text-text-primary;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold text-text-primary;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .table-header {
+    @apply text-left text-xs font-semibold text-text-secondary uppercase tracking-wider px-4 py-3 bg-gray-50;
+  }
+
+  .table-cell {
+    @apply px-4 py-3 text-sm text-text-primary;
+  }
+
+  .status-active {
+    @apply bg-green-50 text-green-700;
+  }
+
+  .status-inactive {
+    @apply bg-gray-100 text-gray-600;
+  }
+
+  .status-pending {
+    @apply bg-amber-50 text-amber-700;
+  }
+
+  .status-suspended {
+    @apply bg-red-50 text-red-700;
+  }
+
+  .status-draft {
+    @apply bg-slate-100 text-slate-600;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}

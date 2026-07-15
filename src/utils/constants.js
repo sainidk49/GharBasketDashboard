@@ -1,0 +1,112 @@
+export const ROLES = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  ADMIN: 'admin',
+  SELLER: 'seller',
+  CUSTOMER: 'customer'
+};
+
+export const PERMISSIONS = {
+  SELLER_VIEW: 'SELLER_VIEW',
+  SELLER_CREATE: 'SELLER_CREATE',
+  SELLER_UPDATE: 'SELLER_UPDATE',
+  SELLER_DELETE: 'SELLER_DELETE',
+  SELLER_SUSPEND: 'SELLER_SUSPEND',
+  USER_VIEW: 'USER_VIEW',
+  PRODUCT_VIEW: 'PRODUCT_VIEW',
+  PRODUCT_CREATE: 'PRODUCT_CREATE',
+  PRODUCT_UPDATE: 'PRODUCT_UPDATE',
+  PRODUCT_DELETE: 'PRODUCT_DELETE',
+  ORDER_VIEW: 'ORDER_VIEW',
+  ORDER_ACCEPT: 'ORDER_ACCEPT',
+  ORDER_CANCEL: 'ORDER_CANCEL',
+  ORDER_UPDATE_STATUS: 'ORDER_UPDATE_STATUS',
+  CATEGORY_VIEW: 'CATEGORY_VIEW',
+  CATEGORY_MANAGE: 'CATEGORY_MANAGE',
+  REPORT_VIEW: 'REPORT_VIEW',
+  SETTINGS_MANAGE: 'SETTINGS_MANAGE'
+};
+
+export const ORDER_STATUSES = {
+  PLACED: 'PLACED',
+  CONFIRMED: 'CONFIRMED',
+  PACKING: 'PACKING',
+  OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
+  DELIVERED: 'DELIVERED',
+  CANCELLED: 'CANCELLED'
+};
+
+export const ORDER_STATUS_FLOW = {
+  PLACED: ['CONFIRMED', 'CANCELLED'],
+  CONFIRMED: ['PACKING', 'CANCELLED'],
+  PACKING: ['OUT_FOR_DELIVERY', 'CANCELLED'],
+  OUT_FOR_DELIVERY: ['DELIVERED'],
+  DELIVERED: [],
+  CANCELLED: []
+};
+
+export const SELLER_STATUSES = {
+  PENDING: 'pending',
+  ACTIVE: 'active',
+  SUSPENDED: 'suspended',
+  REJECTED: 'rejected',
+  INACTIVE: 'inactive'
+};
+
+export const PRODUCT_STATUSES = {
+  DRAFT: 'draft',
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+  ARCHIVED: 'archived'
+};
+
+export const PRODUCT_TYPES = {
+  SIMPLE: 'simple',
+  VARIABLE: 'variable'
+};
+
+export const SELLING_TYPES = {
+  PIECE: 'piece',
+  WEIGHT: 'weight',
+  VOLUME: 'volume',
+  PACK: 'pack',
+  BOX: 'box',
+  BOTTLE: 'bottle',
+  DOZEN: 'dozen',
+  CUSTOM: 'custom'
+};
+
+export const SELLING_TYPE_UNITS = {
+  weight: ['mg', 'gm', 'kg'],
+  volume: ['ml', 'litre'],
+  piece: ['piece'],
+  pack: ['pack'],
+  box: ['box'],
+  bottle: ['bottle'],
+  dozen: ['dozen']
+};
+
+export const GST_OPTIONS = [
+  { value: 0, label: '0% (Exempt)' },
+  { value: 5, label: '5%' },
+  { value: 12, label: '12%' },
+  { value: 18, label: '18%' },
+  { value: 28, label: '28%' }
+];
+
+export const DIETARY_LABELS = [
+  'Vegetarian', 'Non-Vegetarian', 'Vegan', 'Organic', 'Gluten Free',
+  'Sugar Free', 'No Added Sugar', 'Preservative Free', 'Chemical Free',
+  'Fresh', 'Seasonal', 'Premium'
+];
+
+export const PAYMENT_METHODS = {
+  UPI: 'UPI',
+  CASH_ON_DELIVERY: 'CASH_ON_DELIVERY'
+};
+
+export const PAYMENT_STATUSES = {
+  PENDING: 'PENDING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+  REFUNDED: 'REFUNDED'
+};
