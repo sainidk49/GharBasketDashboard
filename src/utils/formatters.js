@@ -92,3 +92,21 @@ export const truncateText = (text, maxLength = 50) => {
   if (!text) return '';
   return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
 };
+
+export const getStatusColor = (status) => {
+  if (!status) return 'bg-gray-100 text-gray-800';
+  
+  const s = status.toLowerCase();
+  if (['active', 'delivered', 'completed', 'confirmed'].includes(s)) return 'bg-green-100 text-green-800';
+  if (['pending', 'placed', 'packing'].includes(s)) return 'bg-yellow-100 text-yellow-800';
+  if (['suspended', 'rejected', 'cancelled', 'failed', 'error'].includes(s)) return 'bg-red-100 text-red-800';
+  if (['out_for_delivery'].includes(s)) return 'bg-blue-100 text-blue-800';
+  
+  return 'bg-gray-100 text-gray-800';
+};
+
+export const getFileUrl = (pathOrUrl) => {
+  if (!pathOrUrl) return '';
+  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) return pathOrUrl;
+  return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${pathOrUrl.replace(/^\//, '')}`;
+};
