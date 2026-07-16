@@ -3,7 +3,7 @@ import { ROLES, PERMISSIONS } from './constants';
 const ALL_PERMISSIONS = Object.values(PERMISSIONS);
 
 export const getPermissionsForRole = (role, sellerPermissions = []) => {
-  if (role === ROLES.ADMIN) return ALL_PERMISSIONS;
+  if (role === ROLES.ADMIN || role === ROLES.SUPER_ADMIN) return ALL_PERMISSIONS;
   if (role === ROLES.SELLER) return sellerPermissions;
   return [];
 };

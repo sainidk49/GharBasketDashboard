@@ -4,10 +4,15 @@ const sellerApi = {
   getDashboardStats: (params) => api.get('/seller', { params }),
   
   // Products
+  getCategories: (params) => api.get('/products/categories', { params }),
   getProducts: (params) => api.get('/seller/products', { params }),
-  createProduct: (data) => api.post('/seller/products', data),
+  createProduct: (data) => api.post('/seller/products', data, data instanceof FormData ? {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  } : undefined),
   getProductById: (id) => api.get(`/seller/products/${id}`),
-  updateProduct: (id, data) => api.put(`/seller/products/${id}`, data),
+  updateProduct: (id, data) => api.put(`/seller/products/${id}`, data, data instanceof FormData ? {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  } : undefined),
   deleteProduct: (id) => api.delete(`/seller/products/${id}`),
   duplicateProduct: (id) => api.post(`/seller/products/${id}/duplicate`),
   

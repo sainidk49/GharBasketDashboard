@@ -70,7 +70,12 @@ export const getApiBaseUrl = () => {
 
 export const getFileUrl = (path) => {
   if (!path) return null;
-  if (path.startsWith('http')) return path;
+  const resolvedPath = typeof path === 'object'
+    ? path.url || path.secure_url || path.path || ''
+    : path;
+
+  if (!resolvedPath || typeof resolvedPath !== 'string') return null;
+  if (resolvedPath.startsWith('http')) return resolvedPath;
   const baseUrl = getApiBaseUrl().replace('/api', '');
-  return `${baseUrl}${path}`;
+  return `${baseUrl}${resolvedPath}`;
 };

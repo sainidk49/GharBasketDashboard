@@ -3,28 +3,41 @@ import { Link } from 'react-router-dom';
 import adminApi from '../../api/adminApi';
 import DataTable from '../../components/ui/DataTable';
 import { useTableParams } from '../../hooks/useTableParams';
-import { Plus, Edit, Shield, Search } from 'lucide-react';
+import { Plus, Edit, ShieldCheck } from 'lucide-react';
 import { formatDate, formatSellerStatus, getStatusColor } from '../../utils/formatters';
+import toast from 'react-hot-toast';
 
 const SellersList = () => {
   const { params, setPage, setSearch } = useTableParams({ limit: 10 });
   const [data, setData] = useState({ profiles: [], totalCount: 0, totalPages: 1 });
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchSellers = async () => {
+    setIsLoading(true);
+    try {
+      const response = await adminApi.getSellers(params);
+      setData(response.data);
+    } catch (error) {
+      console.error('Failed to fetch sellers:', error);
+      toast.error('Failed to fetch sellers');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchSellers = async () => {
-      setIsLoading(true);
-      try {
-        const response = await adminApi.getSellers(params);
-        setData(response.data);
-      } catch (error) {
-        console.error('Failed to fetch sellers:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchSellers();
   }, [params]);
+
+  const activateSeller = async (sellerId) => {
+    try {
+      await adminApi.updateSellerStatus(sellerId, { status: 'active' });
+      toast.success('Seller activated');
+      fetchSellers();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to activate seller');
+    }
+  };
 
   const columns = [
     {
@@ -71,9 +84,16 @@ const SellersList = () => {
           <Link to={`/admin/sellers/${row._id}`} className="btn-ghost p-2" title="Edit/View Details">
             <Edit size={18} />
           </Link>
-          <button className="btn-ghost p-2 text-primary" title="Permissions">
-            <Shield size={18} />
-          </button>
+          {row.status !== 'active' && (
+            <button
+              type="button"
+              onClick={() => activateSeller(row._id)}
+              className="btn-ghost p-2 text-primary"
+              title="Activate seller"
+            >
+              <ShieldCheck size={18} />
+            </button>
+          )}
         </div>
       )
     }

@@ -107,6 +107,11 @@ export const getStatusColor = (status) => {
 
 export const getFileUrl = (pathOrUrl) => {
   if (!pathOrUrl) return '';
-  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) return pathOrUrl;
-  return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${pathOrUrl.replace(/^\//, '')}`;
+  const resolvedPath = typeof pathOrUrl === 'object'
+    ? pathOrUrl.url || pathOrUrl.secure_url || pathOrUrl.path || ''
+    : pathOrUrl;
+
+  if (!resolvedPath || typeof resolvedPath !== 'string') return '';
+  if (resolvedPath.startsWith('http://') || resolvedPath.startsWith('https://')) return resolvedPath;
+  return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${resolvedPath.replace(/^\//, '')}`;
 };

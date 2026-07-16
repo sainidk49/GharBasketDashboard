@@ -8,7 +8,7 @@ export const useAuth = () => {
   );
 
   const role = user?.role;
-  const isAdmin = role === ROLES.ADMIN;
+  const isAdmin = role === ROLES.ADMIN || role === ROLES.SUPER_ADMIN;
   const isSeller = role === ROLES.SELLER;
   const permissions = getPermissionsForRole(role, user?.sellerProfile?.permissions || []);
 

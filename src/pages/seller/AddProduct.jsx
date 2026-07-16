@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import sellerApi from '../../api/sellerApi';
-import adminApi from '../../api/adminApi'; // Used to fetch categories for now
 import toast from 'react-hot-toast';
 import { ArrowLeft, Loader2, Save, Image as ImageIcon, Plus, X } from 'lucide-react';
 import { SELLING_TYPES, PRODUCT_STATUSES, GST_OPTIONS } from '../../utils/constants';
@@ -15,6 +14,9 @@ const AddProduct = () => {
   const [isLoading, setIsLoading] = useState(isEditing);
   const [categories, setCategories] = useState([]);
   const [images, setImages] = useState([]);
+  const [newImages, setNewImages] = useState([]);
+  const [removedImages, setRemovedImages] = useState([]);
+  const fileInputRef = useRef(null);
 
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
     defaultValues: {
@@ -32,8 +34,8 @@ const AddProduct = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const catRes = await adminApi.getCategories({ isActive: true });
-        setCategories(catRes.data.data);
+        const catRes = await sellerApi.getCategories();
+        setCategories(catRes.data.data || []);
 
         if (isEditing) {
           const prodRes = await sellerApi.getProductById(id);
@@ -55,6 +57,8 @@ const AddProduct = () => {
             taxIncluded: data.taxIncluded ?? true
           });
           setImages(data.images || []);
+          setNewImages([]);
+          setRemovedImages([]);
         }
       } catch (error) {
         toast.error('Failed to load required data');
@@ -66,21 +70,81 @@ const AddProduct = () => {
     fetchData();
   }, [id, isEditing, reset, navigate]);
 
-  const addImageUrl = () => {
-    const url = window.prompt('Enter image URL:');
-    if (url) {
-      setImages([...images, url]);
+  const handleImageSelect = (event) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const validFiles = files.filter((file) => {
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`${file.name} is not a supported image type`);
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} must be under 5MB`);
+        return false;
+      }
+      return true;
+    });
+
+    const availableSlots = 10 - images.length - newImages.length;
+    if (validFiles.length > availableSlots) {
+      toast.error(`You can upload up to 10 product images`);
     }
+
+    const selectedImages = validFiles.slice(0, availableSlots).map((file) => ({
+      file,
+      preview: URL.createObjectURL(file)
+    }));
+
+    setNewImages((current) => [...current, ...selectedImages]);
+    event.target.value = '';
   };
 
-  const removeImage = (index) => {
+  const removeExistingImage = (index) => {
+    const image = images[index];
+    if (image?.publicId) {
+      setRemovedImages((current) => [...current, image.publicId]);
+    }
     setImages(images.filter((_, i) => i !== index));
+  };
+
+  const removeNewImage = (index) => {
+    const image = newImages[index];
+    if (image?.preview) URL.revokeObjectURL(image.preview);
+    setNewImages(newImages.filter((_, i) => i !== index));
+  };
+
+  const buildProductFormData = (data) => {
+    const payload = {
+      ...data,
+      originalPrice: data.originalPrice || data.sellingPrice,
+      sellingPrice: Number(data.sellingPrice),
+      stockQuantity: Number(data.stockQuantity)
+    };
+
+    const formData = new FormData();
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        formData.append(key, value);
+      }
+    });
+
+    newImages.forEach(({ file }) => {
+      formData.append('files', file);
+    });
+
+    if (removedImages.length > 0) {
+      formData.append('removedImages', JSON.stringify(removedImages));
+    }
+
+    return formData;
   };
 
   const onSubmit = async (data) => {
     try {
       setIsSubmitting(true);
-      const payload = { ...data, images };
+      const payload = buildProductFormData(data);
       
       if (isEditing) {
         await sellerApi.updateProduct(id, payload);
@@ -176,25 +240,49 @@ const AddProduct = () => {
             <div className="card p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="section-title">Product Images</h2>
-                <button type="button" onClick={addImageUrl} className="btn-ghost text-primary text-sm flex items-center gap-1">
-                  <Plus size={16} /> Add Image URL
+                <button type="button" onClick={() => fileInputRef.current?.click()} className="btn-ghost text-primary text-sm flex items-center gap-1">
+                  <Plus size={16} /> Upload Images
                 </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  multiple
+                  className="hidden"
+                  onChange={handleImageSelect}
+                />
               </div>
               
-              {images.length === 0 ? (
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50">
+              {images.length === 0 && newImages.length === 0 ? (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50 hover:border-primary hover:bg-green-50/40 transition-colors"
+                >
                   <ImageIcon className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                  <p className="text-sm text-gray-500">No images added yet. Click 'Add Image URL' to add an external image link.</p>
-                  <p className="text-xs text-gray-400 mt-1">Image upload feature coming soon.</p>
-                </div>
+                  <p className="text-sm text-gray-600">Click to upload product images</p>
+                  <p className="text-xs text-gray-400 mt-1">JPG, PNG, or WEBP. Max 5MB each.</p>
+                </button>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {images.map((img, idx) => (
-                    <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-200 aspect-square bg-gray-50">
-                      <img src={img} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://placehold.co/200x200?text=Error'} />
+                    <div key={img.publicId || img.url || idx} className="relative group rounded-lg overflow-hidden border border-gray-200 aspect-square bg-gray-50">
+                      <img src={img.url || img} alt="" className="w-full h-full object-cover" />
                       <button
                         type="button"
-                        onClick={() => removeImage(idx)}
+                        onClick={() => removeExistingImage(idx)}
+                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  {newImages.map((img, idx) => (
+                    <div key={img.preview} className="relative group rounded-lg overflow-hidden border border-gray-200 aspect-square bg-gray-50">
+                      <img src={img.preview} alt="" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeNewImage(idx)}
                         className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <X size={14} />
