@@ -60,8 +60,9 @@ export const PRODUCT_STATUSES = {
 };
 
 export const PRODUCT_TYPES = {
-  SIMPLE: 'simple',
-  VARIABLE: 'variable'
+  WEIGHT: 'weight',
+  PIECE: 'piece',
+  QUANTITY: 'quantity'
 };
 
 export const SELLING_TYPES = {

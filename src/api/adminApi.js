@@ -24,6 +24,9 @@ const adminApi = {
   getOrders: (params) => api.get('/admin/orders', { params }),
   getOrderById: (id) => api.get(`/admin/orders/${id}`),
   updateOrderStatus: (id, data) => api.put(`/admin/orders/${id}/status`, data),
+
+  // Products
+  getProducts: (params) => api.get('/admin/products', { params }),
   
   // Categories
   getCategories: (params) => api.get('/admin/categories', { params }),

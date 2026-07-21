@@ -4,7 +4,13 @@ import { useForm } from 'react-hook-form';
 import sellerApi from '../../api/sellerApi';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Loader2, Save, Image as ImageIcon, Plus, X } from 'lucide-react';
-import { SELLING_TYPES, PRODUCT_STATUSES, GST_OPTIONS } from '../../utils/constants';
+import { PRODUCT_TYPES, PRODUCT_STATUSES, GST_OPTIONS } from '../../utils/constants';
+
+const PRODUCT_TYPE_OPTIONS = [
+  { value: PRODUCT_TYPES.WEIGHT, label: 'Weight Based' },
+  { value: PRODUCT_TYPES.PIECE, label: 'Piece Based' },
+  { value: PRODUCT_TYPES.QUANTITY, label: 'Quantity Based' }
+];
 
 const AddProduct = () => {
   const { id } = useParams();
@@ -18,18 +24,48 @@ const AddProduct = () => {
   const [removedImages, setRemovedImages] = useState([]);
   const fileInputRef = useRef(null);
 
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm({
     defaultValues: {
       status: PRODUCT_STATUSES.ACTIVE,
-      sellingType: SELLING_TYPES.PIECE,
+      productType: PRODUCT_TYPES.PIECE,
       isAvailable: true,
       stockQuantity: 10,
+      unit: 'piece',
+      pricingUnitValue: 1,
+      minimumOrderQuantity: 1,
+      maximumOrderQuantity: 10,
+      lowStockThreshold: 5,
       taxIncluded: true,
       gst: 0
     }
   });
 
-  const sellingType = watch('sellingType');
+  const productType = watch('productType');
+  const unit = watch('unit');
+
+  useEffect(() => {
+    if (isEditing) return;
+    if (productType === PRODUCT_TYPES.WEIGHT) {
+      setValue('unit', 'grm');
+      setValue('stockQuantity', 20000);
+      setValue('pricingUnitValue', 1000);
+      setValue('minimumOrderQuantity', 1000);
+      setValue('maximumOrderQuantity', 0);
+      setValue('lowStockThreshold', 1000);
+    } else if (productType === PRODUCT_TYPES.QUANTITY) {
+      setValue('unit', 'pack');
+      setValue('pricingUnitValue', 1);
+      setValue('minimumOrderQuantity', 1);
+      setValue('maximumOrderQuantity', 0);
+      setValue('lowStockThreshold', 5);
+    } else {
+      setValue('unit', 'piece');
+      setValue('pricingUnitValue', 1);
+      setValue('minimumOrderQuantity', 1);
+      setValue('maximumOrderQuantity', 0);
+      setValue('lowStockThreshold', 5);
+    }
+  }, [productType, isEditing, setValue]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,13 +80,21 @@ const AddProduct = () => {
           reset({
             name: data.name,
             sku: data.sku,
+            barcode: data.barcode,
+            brand: data.brand,
+            subCategory: data.subCategory,
             categoryId: data.categoryId?._id,
             description: data.description,
             originalPrice: data.originalPrice,
             sellingPrice: data.sellingPrice,
             stockQuantity: data.stockQuantity,
-            sellingType: data.sellingType,
+            productType: data.productType || data.sellingType || PRODUCT_TYPES.PIECE,
             unit: data.unit,
+            pricingUnitValue: data.pricingUnitValue || data.inventory?.pricingUnitValue || 1,
+            minimumOrderQuantity: data.inventory?.minimumOrderQuantity || 1,
+            maximumOrderQuantity: data.inventory?.maximumOrderQuantity || data.maxPurchaseQty || data.stockQuantity,
+            lowStockThreshold: data.lowStockThreshold || data.inventory?.lowStockThreshold || data.minStockAlert || 5,
+            packageSize: data.inventory?.packageSize || data.packageSize,
             status: data.status,
             isAvailable: data.isAvailable,
             gst: data.gst || 0,
@@ -118,9 +162,15 @@ const AddProduct = () => {
   const buildProductFormData = (data) => {
     const payload = {
       ...data,
-      originalPrice: data.originalPrice || data.sellingPrice,
+      productType: data.productType,
+      sellingType: data.productType,
       sellingPrice: Number(data.sellingPrice),
-      stockQuantity: Number(data.stockQuantity)
+      originalPrice: Number(data.originalPrice || data.sellingPrice),
+      stockQuantity: Number(data.stockQuantity),
+      pricingUnitValue: Number(data.pricingUnitValue || 1),
+      minimumOrderQuantity: Number(data.minimumOrderQuantity || 1),
+      maximumOrderQuantity: Number(data.maximumOrderQuantity || 0),
+      lowStockThreshold: Number(data.lowStockThreshold || 0)
     };
 
     const formData = new FormData();
@@ -162,6 +212,20 @@ const AddProduct = () => {
     }
   };
 
+  const onError = (errors) => {
+    if (errors.maximumOrderQuantity) {
+      toast.error(errors.maximumOrderQuantity.message);
+    } else if (errors.minimumOrderQuantity) {
+      toast.error(errors.minimumOrderQuantity.message);
+    } else if (errors.stockQuantity) {
+      toast.error(errors.stockQuantity.message);
+    } else {
+      toast.error('Please fill all required fields correctly.');
+    }
+  };
+
+  const onFormSubmit = handleSubmit(onSubmit, onError);
+
   if (isLoading) {
     return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-primary h-8 w-8" /></div>;
   }
@@ -180,7 +244,7 @@ const AddProduct = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={onFormSubmit} className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Main Info Column */}
@@ -222,6 +286,21 @@ const AddProduct = () => {
                       placeholder="Stock Keeping Unit"
                       {...register('sku')}
                     />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="label-text">Sub Category</label>
+                    <input type="text" className="input-field" placeholder="E.g. Rice" {...register('subCategory')} />
+                  </div>
+                  <div>
+                    <label className="label-text">Brand</label>
+                    <input type="text" className="input-field" placeholder="Brand name" {...register('brand')} />
+                  </div>
+                  <div>
+                    <label className="label-text">Barcode</label>
+                    <input type="text" className="input-field" placeholder="EAN / UPC" {...register('barcode')} />
                   </div>
                 </div>
 
@@ -330,29 +409,38 @@ const AddProduct = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="label-text">Selling Type *</label>
+                    <label className="label-text">Product Type *</label>
                     <select
                       className="input-field"
-                      {...register('sellingType')}
+                      {...register('productType')}
                     >
-                      {Object.values(SELLING_TYPES).map(t => (
-                        <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                      {PRODUCT_TYPE_OPTIONS.map(t => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="label-text">Unit *</label>
-                    <input
-                      type="text"
-                      className={`input-field ${errors.unit ? 'border-error' : ''}`}
-                      placeholder={sellingType === 'weight' ? 'e.g. 500gm' : 'e.g. 1 Dozen'}
-                      {...register('unit', { required: 'Required' })}
-                    />
+                    <label className="label-text">{productType === PRODUCT_TYPES.WEIGHT ? 'Weight Unit' : 'Display Unit'} *</label>
+                    {productType === PRODUCT_TYPES.WEIGHT ? (
+                      <select className="input-field" {...register('unit', { required: 'Required' })}>
+                        <option value="grm">grm</option>
+                        <option value="kg">kg</option>
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        className={`input-field ${errors.unit ? 'border-error' : ''}`}
+                        placeholder={productType === PRODUCT_TYPES.QUANTITY ? 'pack' : 'piece'}
+                        {...register('unit', { required: 'Required' })}
+                      />
+                    )}
                   </div>
                 </div>
 
                 <div>
-                  <label className="label-text">Stock Quantity *</label>
+                  <label className="label-text">
+                    {productType === PRODUCT_TYPES.WEIGHT ? 'Total Weight in Grams *' : productType === PRODUCT_TYPES.PIECE ? 'Total Pieces *' : 'Total Quantity *'}
+                  </label>
                   <input
                     type="number"
                     className={`input-field ${errors.stockQuantity ? 'border-error' : ''}`}
@@ -363,6 +451,77 @@ const AddProduct = () => {
                     })}
                   />
                   {errors.stockQuantity && <p className="error-text">{errors.stockQuantity.message}</p>}
+                  {productType === PRODUCT_TYPES.WEIGHT && (
+                    <p className="text-xs text-gray-500 mt-1">Store inventory in grams. Example: 20 KG = 20000 grams.</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="label-text">Price Applies To</label>
+                  <input
+                    type="number"
+                    className="input-field"
+                    placeholder={productType === PRODUCT_TYPES.WEIGHT && unit === 'kg' ? '1000' : '1'}
+                    {...register('pricingUnitValue', { 
+                      min: { value: 1, message: 'Must be at least 1' },
+                      onChange: (e) => {
+                        setValue('minimumOrderQuantity', e.target.value, { shouldValidate: true });
+                      }
+                    })}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {productType === PRODUCT_TYPES.WEIGHT ? 'Use 1000 when the selling price is per KG, or 1 when it is per gram.' : 'Use 1 when the selling price is per piece or pack.'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="label-text">Minimum Order Quantity *</label>
+                    <input
+                      type="number"
+                      className={`input-field ${errors.minimumOrderQuantity ? 'border-error' : ''}`}
+                      {...register('minimumOrderQuantity', {
+                        required: 'Minimum Order Quantity is required',
+                        min: { value: 1, message: 'Minimum Order Quantity must be > 0' },
+                        validate: {
+                          lessThanMax: value => {
+                            const max = Number(watch('maximumOrderQuantity') || 0);
+                            if (max > 0 && Number(value) > max) return 'Minimum Order Quantity cannot exceed Maximum Order Quantity.';
+                            return true;
+                          }
+                        }
+                      })}
+                    />
+                    {errors.minimumOrderQuantity && <p className="error-text">{errors.minimumOrderQuantity.message}</p>}
+                  </div>
+                  <div>
+                    <label className="label-text">Maximum Order Quantity *</label>
+                    <input
+                      type="number"
+                      className={`input-field ${errors.maximumOrderQuantity ? 'border-error' : ''}`}
+                      placeholder="0"
+                      {...register('maximumOrderQuantity', {
+                        required: 'Please enter the Maximum Order Quantity.',
+                        min: { value: 1, message: 'Please enter the Maximum Order Quantity.' },
+                        validate: {
+                          lessThanStock: value => Number(value) <= Number(watch('stockQuantity')) || 'Maximum Order Quantity cannot exceed the available stock.'
+                        }
+                      })}
+                    />
+                    {errors.maximumOrderQuantity && <p className="error-text">{errors.maximumOrderQuantity.message}</p>}
+                  </div>
+                </div>
+
+                {productType === PRODUCT_TYPES.QUANTITY && (
+                  <div>
+                    <label className="label-text">Package Size</label>
+                    <input type="text" className="input-field" placeholder="E.g. 4 soaps per pack" {...register('packageSize')} />
+                  </div>
+                )}
+
+                <div>
+                  <label className="label-text">Low Stock Alert</label>
+                  <input type="number" className="input-field" {...register('lowStockThreshold')} />
                 </div>
               </div>
             </div>

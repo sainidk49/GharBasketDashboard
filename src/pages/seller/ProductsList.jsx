@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import sellerApi from '../../api/sellerApi';
 import DataTable from '../../components/ui/DataTable';
 import { useTableParams } from '../../hooks/useTableParams';
-import { Plus, Edit, Copy, Trash2, Eye } from 'lucide-react';
+import { Plus, Edit, Copy, Trash2 } from 'lucide-react';
 import { formatCurrency, formatProductStatus, getStatusColor, getFileUrl } from '../../utils/formatters';
+import { formatStockQuantity, getStockStatusClass, getStockStatusLabel } from '../../utils/inventory';
 import toast from 'react-hot-toast';
 
 const ProductsList = () => {
@@ -90,9 +91,12 @@ const ProductsList = () => {
       header: 'Stock',
       accessor: 'stockQuantity',
       render: (row) => (
-        <div className="flex items-center gap-2">
-          <span className={`h-2 w-2 rounded-full ${row.stockQuantity > 10 ? 'bg-green-500' : row.stockQuantity > 0 ? 'bg-orange-500' : 'bg-red-500'}`}></span>
-          <span className="text-sm">{row.stockQuantity} {row.unit}</span>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className={`h-2 w-2 rounded-full ${getStockStatusClass(row.stockStatus)}`}></span>
+            <span className="text-sm">{formatStockQuantity(row.stockQuantity, row.productType)}</span>
+          </div>
+          <p className="text-xs text-gray-500">{getStockStatusLabel(row.stockStatus)}</p>
         </div>
       )
     },
