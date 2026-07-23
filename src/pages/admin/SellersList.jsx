@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import adminApi from '../../api/adminApi';
 import DataTable from '../../components/ui/DataTable';
 import { useTableParams } from '../../hooks/useTableParams';
-import { Plus, Edit, ShieldCheck } from 'lucide-react';
+import { Plus, Edit, ShieldCheck, Trash2 } from 'lucide-react';
 import { formatDate, formatSellerStatus, getStatusColor } from '../../utils/formatters';
 import toast from 'react-hot-toast';
 
@@ -11,6 +11,7 @@ const SellersList = () => {
   const { params, setPage, setSearch } = useTableParams({ limit: 10 });
   const [data, setData] = useState({ profiles: [], totalCount: 0, totalPages: 1 });
   const [isLoading, setIsLoading] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const fetchSellers = async () => {
     setIsLoading(true);
@@ -36,6 +37,19 @@ const SellersList = () => {
       fetchSellers();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to activate seller');
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
+    try {
+      await adminApi.deleteSeller(deleteConfirm);
+      toast.success('Seller deleted successfully');
+      fetchSellers();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete seller');
+    } finally {
+      setDeleteConfirm(null);
     }
   };
 
@@ -81,7 +95,7 @@ const SellersList = () => {
       cellClassName: 'text-right',
       render: (row) => (
         <div className="flex justify-end gap-2">
-          <Link to={`/admin/sellers/${row._id}`} className="btn-ghost p-2" title="Edit/View Details">
+          <Link to={`/admin/sellers/${row._id}`} className="btn-ghost p-2 text-gray-500 hover:text-primary" title="Edit Details">
             <Edit size={18} />
           </Link>
           {row.status !== 'active' && (
@@ -92,6 +106,16 @@ const SellersList = () => {
               title="Activate seller"
             >
               <ShieldCheck size={18} />
+            </button>
+          )}
+          {row.status !== 'inactive' && (
+            <button
+              type="button"
+              onClick={() => setDeleteConfirm(row._id)}
+              className="btn-ghost p-2 text-red-500 hover:bg-red-50"
+              title="Delete seller"
+            >
+              <Trash2 size={18} />
             </button>
           )}
         </div>
@@ -126,6 +150,30 @@ const SellersList = () => {
         searchValue={params.search}
         searchPlaceholder="Search store name..."
       />
+
+      {/* Custom Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Seller</h3>
+            <p className="text-gray-500 mb-6">Are you sure you want to delete this seller? This action will set their account to inactive.</p>
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setDeleteConfirm(null)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDelete}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

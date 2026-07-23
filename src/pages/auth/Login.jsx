@@ -30,7 +30,9 @@ const Login = () => {
       } else {
         // Redirect to intended route or default dashboard based on role
         if (from === '/' || from === '/login') {
-          navigate((user.role === 'admin' || user.role === 'SUPER_ADMIN') ? '/admin' : '/seller');
+          if (user.role === 'admin' || user.role === 'SUPER_ADMIN') navigate('/admin');
+          else if (user.role === 'delivery_partner') navigate('/delivery');
+          else navigate('/seller');
         } else {
           navigate(from);
         }

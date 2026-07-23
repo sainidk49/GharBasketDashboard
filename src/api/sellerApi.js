@@ -20,6 +20,8 @@ const sellerApi = {
   getOrders: (params) => api.get('/seller/orders', { params }),
   getOrderById: (id) => api.get(`/seller/orders/${id}`),
   updateOrderStatus: (id, data) => api.put(`/seller/orders/${id}/status`, data),
+  assignDeliveryPartner: (orderId, data) => api.put(`/seller/orders/${orderId}/assign`, data),
+  getDeliveryPartners: (params) => api.get('/seller/delivery-partners', { params }),
   
   // Profile
   getProfile: () => api.get('/seller/profile'),

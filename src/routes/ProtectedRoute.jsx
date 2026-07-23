@@ -22,6 +22,7 @@ const ProtectedRoute = ({ children, allowedRoles, requiredPermissions = [] }) =>
     // Redirect to their respective dashboard if they try to access wrong role path
     if (role === 'admin') return <Navigate to="/admin" replace />;
     if (role === 'seller') return <Navigate to="/seller" replace />;
+    if (role === 'delivery_partner') return <Navigate to="/delivery" replace />;
     return <Navigate to="/login" replace />;
   }
 

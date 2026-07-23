@@ -3,12 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import adminApi from '../../api/adminApi';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Loader2, Store, User } from 'lucide-react';
+import { ArrowLeft, Loader2, Store, User, Copy, Check } from 'lucide-react';
 
 const CreateSeller = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdCredentials, setCreatedCredentials] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm();
 
@@ -31,6 +32,20 @@ const CreateSeller = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleCopy = () => {
+    const text = `Welcome to GharBasket!\nYour seller account for ${createdCredentials.storeName} has been created.\n\nLogin ID/Mobile: ${createdCredentials.loginId}\nTemporary Password: ${createdCredentials.password}\n\nPlease login and change your password securely.`;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success('Credentials copied! Redirecting to send...');
+    
+    setTimeout(() => {
+      setCopied(false);
+      // Open WhatsApp to send to the seller's mobile number
+      const whatsappUrl = `https://wa.me/91${createdCredentials.loginId}?text=${encodeURIComponent(text)}`;
+      window.open(whatsappUrl, '_blank');
+    }, 1000);
   };
 
   if (createdCredentials) {
@@ -64,9 +79,18 @@ const CreateSeller = () => {
             </p>
           </div>
 
-          <Link to="/admin/sellers" className="btn-primary inline-flex items-center">
-            Back to Sellers List
-          </Link>
+          <div className="flex gap-4 justify-center">
+            <button 
+              onClick={handleCopy}
+              className="btn-secondary inline-flex items-center gap-2"
+            >
+              {copied ? <Check size={18} /> : <Copy size={18} />}
+              {copied ? 'Copied!' : 'Copy to Send to Seller'}
+            </button>
+            <Link to="/admin/sellers" className="btn-primary inline-flex items-center">
+              Back to Sellers List
+            </Link>
+          </div>
         </div>
       </div>
     );

@@ -10,7 +10,9 @@ import {
   ListTree, 
   Settings, 
   FileText,
-  X 
+  X,
+  Truck,
+  User
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -37,7 +39,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     { name: 'Settings', href: '/seller/settings', icon: Settings },
   ];
 
-  const links = isAdmin ? adminLinks : sellerLinks;
+  const deliveryLinks = [
+    { name: 'Dashboard', href: '/delivery', icon: LayoutDashboard },
+    { name: 'My Deliveries', href: '/delivery/orders', icon: Truck },
+    { name: 'Profile', href: '/delivery/profile', icon: User },
+  ];
+
+  const { user } = useAuth();
+  const links = isAdmin ? adminLinks : (user?.role === 'delivery_partner' ? deliveryLinks : sellerLinks);
 
   return (
     <>
@@ -98,11 +107,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         <div className="p-4 border-t border-sidebar-hover">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-medium text-xs">
-              {isAdmin ? 'AD' : 'SL'}
+              {isAdmin ? 'AD' : (user?.role === 'delivery_partner' ? 'DP' : 'SL')}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">
-                {isAdmin ? 'Administrator' : 'Store Partner'}
+                {isAdmin ? 'Administrator' : (user?.role === 'delivery_partner' ? 'Delivery Partner' : 'Store Partner')}
               </p>
             </div>
           </div>

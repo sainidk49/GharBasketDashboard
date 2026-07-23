@@ -15,6 +15,7 @@ const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard'));
 const UsersList = lazy(() => import('../pages/admin/UsersList'));
 const SellersList = lazy(() => import('../pages/admin/SellersList'));
 const CreateSeller = lazy(() => import('../pages/admin/CreateSeller'));
+const EditSeller = lazy(() => import('../pages/admin/EditSeller'));
 const AdminProductsList = lazy(() => import('../pages/admin/ProductsList'));
 const CategoriesList = lazy(() => import('../pages/admin/CategoriesList'));
 const AdminOrdersList = lazy(() => import('../pages/admin/OrdersList'));
@@ -26,6 +27,11 @@ const SellerProductsList = lazy(() => import('../pages/seller/ProductsList'));
 const AddProduct = lazy(() => import('../pages/seller/AddProduct'));
 const SellerOrdersList = lazy(() => import('../pages/seller/OrdersList'));
 const StoreProfile = lazy(() => import('../pages/seller/StoreProfile'));
+
+// Pages - Delivery
+const DeliveryDashboard = lazy(() => import('../pages/delivery/DeliveryDashboard'));
+const DeliveryOrdersList = lazy(() => import('../pages/delivery/DeliveryOrdersList'));
+const DeliveryProfile = lazy(() => import('../pages/delivery/DeliveryProfile'));
 
 const AppRoutes = () => {
   return (
@@ -47,6 +53,7 @@ const AppRoutes = () => {
           <Route path="users" element={<UsersList />} />
           <Route path="sellers" element={<SellersList />} />
           <Route path="sellers/new" element={<CreateSeller />} />
+          <Route path="sellers/:id" element={<EditSeller />} />
           <Route path="products" element={<AdminProductsList />} />
           <Route path="categories" element={<CategoriesList />} />
           <Route path="orders" element={<AdminOrdersList />} />
@@ -65,6 +72,17 @@ const AppRoutes = () => {
           <Route path="products/:id/edit" element={<AddProduct />} />
           <Route path="orders" element={<SellerOrdersList />} />
           <Route path="profile" element={<StoreProfile />} />
+        </Route>
+
+        {/* Delivery Partner Routes */}
+        <Route path="/delivery" element={
+          <ProtectedRoute allowedRoles={[ROLES.DELIVERY_PARTNER]}>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<DeliveryDashboard />} />
+          <Route path="orders" element={<DeliveryOrdersList />} />
+          <Route path="profile" element={<DeliveryProfile />} />
         </Route>
 
         {/* Redirect root based on auth, handled inside a component or default redirect */}
